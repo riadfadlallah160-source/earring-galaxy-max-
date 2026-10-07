@@ -1,0 +1,27 @@
+name: JVForge Bridge Probe
+on:
+  push:
+    paths:
+      - ".github/workflows/jvforge-bridge-probe.yml"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger JVForge marketplace bridge
+        shell: bash
+        run: |
+          set -u
+          echo "Trying public app route..."
+          HTTP1=$(curl -sS -o /tmp/r1.txt -w "%{http_code}" -X POST             "https://affiliate-network-bridge-9d98fk.v2.appdeploy.ai/api/bootstrap"             -H "Accept: application/json" -H "Content-Type: application/json"             --data '{}') || true
+          echo "APP_HTTP=$HTTP1"
+          cat /tmp/r1.txt || true
+          echo ""
+          if [ "$HTTP1" -lt 200 ] || [ "$HTTP1" -ge 300 ]; then
+            echo "Trying AppDeploy backend route..."
+            HTTP2=$(curl -sS -o /tmp/r2.txt -w "%{http_code}" -X POST               "https://api-v2.appdeploy.ai/app/affiliate-network-bridge-9d98fk/api/bootstrap"               -H "Accept: application/json" -H "Content-Type: application/json"               --data '{}') || true
+            echo "BACKEND_HTTP=$HTTP2"
+            cat /tmp/r2.txt || true
+            echo ""
+          fi
